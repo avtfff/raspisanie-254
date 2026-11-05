@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Расписание 254</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Расписание">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(180deg, #F2F2F7 0%, #E5E5EA 100%);
+            background-attachment: fixed;
+            color: #000000;
+            padding: 24px 16px;
+            padding-top: calc(24px + env(safe-area-inset-top));
+            padding-bottom: calc(24px + env(safe-area-inset-bottom));
+            min-height: 100vh;
+        }
+
+        /* Шапка */
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .header .date {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: #000000;
+            line-height: 1.1;
+            text-transform: capitalize;
+        }
+
+        .header .group {
+            font-size: 16px;
+            color: #8E8E93;
+            margin-top: 6px;
+            font-weight: 500;
+            letter-spacing: -0.2px;
+        }
+
+        /* Круглая кнопка настроек */
+        .settings-btn {
+            position: absolute;
+            top: 4px;
+            right: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(120, 120, 128, 0.12);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+            color: #007AFF;
+        }
+
+        .settings-btn:active {
+            background: rgba(120, 120, 128, 0.25);
+        }
+
+        /* Кнопка сокращённого дня (уменьшенная) */
+        .toggle-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .toggle-button {
+            background: #E5E5EA;
+            border: none;
+            border-radius: 10px;
+            padding: 6px 14px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #007AFF;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            font-family: inherit;
+        }
+
+        .toggle-button:active {
+            background: #D1D1D6;
+        }
+
+        .toggle-button.short-day {
+            background: #007AFF;
+            color: #FFFFFF;
+        }
+
+        /* Карточки */
+        .card {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 18px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03), 0 8px 24px rgba(0,0,0,0.04);
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            border: 0.5px solid rgba(255,255,255,0.4);
+        }
+
+        .card-time {
+            font-family: "SF Mono", "Menlo", monospace;
+            font-size: 14px;
+            font-weight: 600;
+            color: #007AFF;
+            min-width: 80px;
+            padding-top: 2px;
+            white-space: nowrap;
+            letter-spacing: -0.5px;
+        }
+
+        .card-content {
+            flex: 1;
+        }
+
+        .card-subject {
+            font-size: 17px;
+            font-weight: 600;
+            color: #000000;
+            line-height: 1.3;
+            margin-bottom: 4px;
+            letter-spacing: -0.3px;
+        }
+
+        .card-detail {
+            font-size: 14px;
+            color: #8E8E93;
+            line-height: 1.3;
+            font-weight: 400;
+        }
+
+        /* Футер */
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 13px;
+            color: #C7C7CC;
+            padding-bottom: 8px;
+        }
+
+        .footer .author {
+            font-weight: 600;
+            color: #8E8E93;
+            margin-top: 6px;
+            letter-spacing: 0.2px;
+        }
+
+        /* Модальное окно настроек */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-sheet {
+            background: #F2F2F7;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 24px 24px 0 0;
+            padding: 24px 20px;
+            padding-bottom: calc(24px + env(safe-area-inset-bottom));
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active .modal-sheet {
+            transform: translateY(0);
+        }
+
+        .modal-handle {
+            width: 36px;
+            height: 5px;
+            background: #C7C7CC;
+            border-radius: 3px;
+            margin: 0 auto 16px;
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .settings-section {
+            background: #FFFFFF;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .settings-section h3 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #8E8E93;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Список уведомлений */
+        .notif-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .notif-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            background: #F2F2F7;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 500;
+        }
+
+        .notif-time {
+            font-family: "SF Mono", "Menlo", monospace;
+            color: #007AFF;
+            font-weight: 600;
+        }
+
+        .notif-delete {
+            background: none;
+            border: none;
+            color: #FF3B30;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Кнопка добавления */
+        .add-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            padding: 14px;
+            background: #FFFFFF;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 500;
+            color: #007AFF;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: inherit;
+        }
+
+        .add-btn:active {
+            background: #E5E5EA;
+        }
+
+        /* Поле ввода времени */
+        .time-input-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .time-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #E5E5EA;
+            border-radius: 12px;
+            font-size: 17px;
+            font-family: "SF Mono", "Menlo", monospace;
+            text-align: center;
+            background: #FFFFFF;
+            color: #000000;
+        }
+
+        .time-input:focus {
+            outline: none;
+            border-color: #007AFF;
+        }
+
+        .save-time-btn {
+            padding: 12px 20px;
+            background: #007AFF;
+            border: none;
+            border-radius: 12px;
+            color: #FFFFFF;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .save-time-btn:active {
+            background: #0056CC;
+        }
+
+        .empty-notif {
+            text-align: center;
+            color: #8E8E93;
+            font-size: 15px;
+            padding: 8px 0;
+        }
+
+        /* Закрыть */
+        .close-btn {
+            width: 100%;
+            padding: 16px;
+            background: #FFFFFF;
+            border: none;
+            border-radius: 16px;
+            font-size: 17px;
+            font-weight: 600;
+            color: #007AFF;
+            cursor: pointer;
+            margin-top: 8px;
+            font-family: inherit;
+        }
+
+        .close-btn:active {
+            background: #E5E5EA;
+        }
+
+        /* Иконка SVG */
+        .icon {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .icon-lg {
+            width: 28px;
+            height: 28px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="date" id="date-display">Загрузка...</div>
+        <div class="group">Группа 254</div>
+        <button class="settings-btn" id="open-settings" aria-label="Настройки">
+            <svg class="icon" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+        </button>
+    </div>
+
+    <div class="toggle-container">
+        <button class="toggle-button" id="bell-toggle">Сокращённый день</button>
+    </div>
+
+    <div id="schedule-list"></div>
+
+    <div class="footer">
+        Расписание обновляется автоматически
+        <div class="author">by @Avtomatoff</div>
+    </div>
+
+    <!-- Модальное окно настроек -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-title">Настройки</div>
+
+            <div class="settings-section">
+                <h3>Уведомления</h3>
+                <div class="notif-list" id="notif-list">
+                    <!-- Сюда будут добавляться уведомления -->
+                    <div class="empty-notif" id="empty-notif">Нет добавленных уведомлений</div>
+                </div>
+                <div class="time-input-row" id="time-input-row" style="display:none;">
+                    <input type="time" class="time-input" id="new-time-input" value="14:00">
+                    <button class="save-time-btn" id="save-time-btn">Сохранить</button>
+                </div>
+                <button class="add-btn" id="add-notif-btn">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Добавить уведомление
+                </button>
+            </div>
+
+            <button class="close-btn" id="close-settings">Готово</button>
+        </div>
+    </div>
+
+    <script>
+        // --- РАСПИСАНИЕ ЗВОНКОВ ---
+        const NORMAL_BELLS = [
+            { start: "8:00", end: "9:30" },
+            { start: "9:40", end: "11:10" },
+            { start: "11:20", end: "12:50" },
+            { start: "13:50", end: "15:20" },
+            { start: "15:30", end: "17:00" },
+            { start: "17:10", end: "18:40" }
+        ];
+
+        const SHORT_BELLS = [
+            { start: "8:00", end: "9:00" },
+            { start: "9:10", end: "10:10" },
+            { start: "10:20", end: "11:20" },
+            { start: "11:30", end: "12:30" },
+            { start: "12:40", end: "13:40" },
+            { start: "13:50", end: "14:50" }
+        ];
+
+        let isShortDay = false;
+
+        // --- ТЕСТОВЫЕ ДАННЫЕ ---
+        const testSchedule = [
+            { subject: "МДК 01.02 Складская логистика", teacher: "Носкова И.Е." },
+            { subject: "МДК 01.02 Складская логистика", teacher: "Носкова И.Е." },
+            { subject: "МДК 02.02 Распределительная логистика", teacher: "Баранова О.В." }
+        ];
+
+        // --- ДАТА ---
+        const dateDisplay = document.getElementById('date-display');
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const options = { weekday: 'long', day: 'numeric', month: 'long' };
+        let dateString = tomorrow.toLocaleDateString('ru-RU', options);
+        dateString = dateString.charAt(0).toUpperCase() + dateString.slice(1);
+        dateDisplay.textContent = dateString;
+
+        // --- КНОПКА СОКРАЩЁННОГО ДНЯ ---
+        const toggleButton = document.getElementById('bell-toggle');
+        toggleButton.addEventListener('click', () => {
+            isShortDay = !isShortDay;
+            toggleButton.classList.toggle('short-day', isShortDay);
+            renderSchedule();
+        });
+
+        // --- РЕНДЕР РАСПИСАНИЯ ---
+        const listContainer = document.getElementById('schedule-list');
+
+        function renderSchedule() {
+            listContainer.innerHTML = '';
+            const bells = isShortDay ? SHORT_BELLS : NORMAL_BELLS;
+
+            testSchedule.forEach((item, index) => {
+                const bell = bells[index] || { start: "?", end: "?" };
+                const timeStr = `${bell.start} – ${bell.end}`;
+
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="card-time">${timeStr}</div>
+                    <div class="card-content">
+                        <div class="card-subject">${item.subject}</div>
+                        <div class="card-detail">${item.teacher}</div>
+                    </div>
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+
+        renderSchedule();
+
+        // --- НАСТРОЙКИ: УВЕДОМЛЕНИЯ ---
+        let notifications = []; // массив строк "HH:MM"
+
+        const modal = document.getElementById('settings-modal');
+        const openBtn = document.getElementById('open-settings');
+        const closeBtn = document.getElementById('close-settings');
+        const notifList = document.getElementById('notif-list');
+        const emptyNotif = document.getElementById('empty-notif');
+        const addBtn = document.getElementById('add-notif-btn');
+        const timeInputRow = document.getElementById('time-input-row');
+        const newTimeInput = document.getElementById('new-time-input');
+        const saveTimeBtn = document.getElementById('save-time-btn');
+
+        // Открыть/закрыть модалку
+        openBtn.addEventListener('click', () => {
+            modal.classList.add('active');
+            renderNotifications();
+        });
+
+        closeBtn.addEventListener('click', () => {
+            modal.classList.remove('active');
+            timeInputRow.style.display = 'none';
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+                timeInputRow.style.display = 'none';
+            }
+        });
+
+        // Показать поле ввода
+        addBtn.addEventListener('click', () => {
+            timeInputRow.style.display = 'flex';
+            newTimeInput.focus();
+        });
+
+        // Сохранить время
+        saveTimeBtn.addEventListener('click', () => {
+            const time = newTimeInput.value;
+            if (time && !notifications.includes(time)) {
+                notifications.push(time);
+                notifications.sort();
+                renderNotifications();
+            }
+            timeInputRow.style.display = 'none';
+            newTimeInput.value = '14:00';
+        });
+
+        // Отрисовать список уведомлений
+        function renderNotifications() {
+            notifList.innerHTML = '';
+
+            if (notifications.length === 0) {
+                notifList.innerHTML = '<div class="empty-notif">Нет добавленных уведомлений</div>';
+                return;
+            }
+
+            notifications.forEach((time, index) => {
+                const item = document.createElement('div');
+                item.className = 'notif-item';
+                item.innerHTML = `
+                    <span class="notif-time">${time}</span>
+                    <button class="notif-delete" data-index="${index}" aria-label="Удалить">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                `;
+                notifList.appendChild(item);
+            });
+
+            // Обработчики удаления
+            document.querySelectorAll('.notif-delete').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const idx = parseInt(e.currentTarget.dataset.index);
+                    notifications.splice(idx, 1);
+                    renderNotifications();
+                });
+            });
+        }
+    </script>
+</body>
+</html>
