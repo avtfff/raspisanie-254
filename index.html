@@ -12,13 +12,22 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; background: linear-gradient(180deg, #F2F2F7 0%, #E5E5EA 100%); background-attachment: fixed; color: #000000; padding: 24px 16px; padding-top: calc(24px + env(safe-area-inset-top)); padding-bottom: calc(24px + env(safe-area-inset-bottom)); min-height: 100vh; }
+        
         .header { text-align: center; margin-bottom: 20px; position: relative; }
         .header .date { font-size: 32px; font-weight: 800; letter-spacing: -1px; line-height: 1.1; text-transform: capitalize; }
         .header .group { font-size: 16px; color: #8E8E93; margin-top: 6px; font-weight: 500; }
         .settings-btn { position: absolute; top: 4px; right: 0; width: 36px; height: 36px; border-radius: 50%; background: rgba(120, 120, 128, 0.12); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #007AFF; }
-        .toggle-container { display: flex; justify-content: center; margin-bottom: 20px; }
-        .toggle-button { background: #E5E5EA; border: none; border-radius: 10px; padding: 6px 14px; font-size: 14px; font-weight: 500; color: #007AFF; cursor: pointer; transition: background 0.2s, color 0.2s; }
-        .toggle-button.short-day { background: #007AFF; color: #FFFFFF; }
+        
+        /* Ползунок сокращенного дня */
+        .short-day-toggle { display: flex; justify-content: flex-start; margin-bottom: 16px; padding-left: 4px; }
+        .switch { position: relative; display: inline-block; width: 51px; height: 31px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #E5E5EA; transition: .3s; border-radius: 31px; }
+        .slider:before { position: absolute; content: ""; height: 27px; width: 27px; left: 2px; bottom: 2px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+        input:checked + .slider { background-color: #007AFF; }
+        input:checked + .slider:before { transform: translateX(20px); }
+        .switch-label { font-size: 14px; color: #3C3C43; margin-left: 8px; font-weight: 500; }
+
         .card { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); border-radius: 18px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); display: flex; gap: 14px; border: 0.5px solid rgba(255,255,255,0.4); }
         .card-time { font-family: "SF Mono", monospace; font-size: 14px; font-weight: 600; color: #007AFF; min-width: 80px; padding-top: 2px; }
         .card-subject { font-size: 17px; font-weight: 600; line-height: 1.3; margin-bottom: 4px; }
@@ -65,14 +74,18 @@
 
     <div class="header">
         <div class="date" id="date-display">Загрузка...</div>
-        <div class="group">Группа 254</div>
+        <div class="group" id="date-subtitle">Группа 254</div>
         <button class="settings-btn" id="open-settings" aria-label="Настройки">
             <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </button>
     </div>
 
-    <div class="toggle-container">
-        <button class="toggle-button" id="bell-toggle">Сокращённый день</button>
+    <div class="short-day-toggle">
+        <label class="switch">
+            <input type="checkbox" id="short-day-checkbox">
+            <span class="slider"></span>
+        </label>
+        <span class="switch-label">Сокращённый день</span>
     </div>
 
     <div id="schedule-list">
@@ -89,14 +102,12 @@
             <div class="modal-handle"></div>
             <div class="modal-title">Настройки</div>
             
-            <!-- Блок Push-уведомлений -->
             <div class="settings-section">
                 <h3>Push-уведомления</h3>
                 <div class="push-status" id="push-status">Проверка статуса...</div>
                 <button class="enable-push-btn" id="enable-push-btn">Включить уведомления</button>
             </div>
 
-            <!-- Блок времени напоминаний -->
             <div class="settings-section">
                 <h3>Время напоминаний</h3>
                 <div class="notif-list" id="notif-list">
@@ -112,7 +123,6 @@
                 </button>
             </div>
 
-            <!-- Блок Админ-панели -->
             <div class="settings-section">
                 <h3>Тестовый режим (Админ)</h3>
                 <div id="admin-auth-block">
@@ -146,7 +156,6 @@
     </div>
 
     <script>
-        // --- VAPID КЛЮЧ ---
         const VAPID_PUBLIC_KEY = 'BCyZSlvKpYoRx_SaFpHtqyryq9lmutEyJ-hpeh_1jEcwTPvcJRtpv0VGw_zfOSZVjIzLCj5ggWgIyfWJQJSClZI';
         const DEFAULT_ADMIN_PASSWORD = 'admin254'; 
         let adminPassword = localStorage.getItem('adminPassword') || DEFAULT_ADMIN_PASSWORD;
@@ -154,6 +163,7 @@
         let scheduleData = JSON.parse(localStorage.getItem('scheduleData')) || {};
         let currentDate = localStorage.getItem('currentDate') || getTomorrowDate();
         let manualMode = localStorage.getItem('manualMode') === 'true';
+        let isShortDay = localStorage.getItem('isShortDay_' + currentDate) === 'true';
 
         function getTomorrowDate() {
             const d = new Date();
@@ -161,7 +171,10 @@
             return d.toISOString().split('T')[0];
         }
 
-        // Загрузка JSON
+        function getTodayDate() {
+            return new Date().toISOString().split('T')[0];
+        }
+
         async function loadScheduleJson() {
             if (manualMode) {
                 renderSchedule();
@@ -182,11 +195,18 @@
 
         function updateDateDisplay() {
             const dateDisplay = document.getElementById('date-display');
+            const subtitle = document.getElementById('date-subtitle');
             const d = new Date(currentDate);
             const options = { weekday: 'long', day: 'numeric', month: 'long' };
             let dateString = d.toLocaleDateString('ru-RU', options);
             dateString = dateString.charAt(0).toUpperCase() + dateString.slice(1);
             dateDisplay.textContent = dateString;
+            
+            if (currentDate === getTomorrowDate()) {
+                subtitle.textContent = 'Группа 254 (завтра)';
+            } else {
+                subtitle.textContent = 'Группа 254';
+            }
         }
 
         const listContainer = document.getElementById('schedule-list');
@@ -213,6 +233,14 @@
             });
         }
 
+        // Ползунок сокращенного дня
+        const shortDayCheckbox = document.getElementById('short-day-checkbox');
+        shortDayCheckbox.checked = isShortDay;
+        shortDayCheckbox.addEventListener('change', (e) => {
+            isShortDay = e.target.checked;
+            localStorage.setItem('isShortDay_' + currentDate, isShortDay);
+        });
+
         const modal = document.getElementById('settings-modal');
         const openBtn = document.getElementById('open-settings');
         const closeBtn = document.getElementById('close-settings');
@@ -236,7 +264,7 @@
             } 
         });
 
-        // --- УВЕДОМЛЕНИЯ (ИНТЕРФЕЙС) ---
+        // Уведомления интерфейс
         let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
         const notifList = document.getElementById('notif-list');
         const addNotifBtn = document.getElementById('add-notif-btn');
@@ -288,7 +316,7 @@
             });
         }
 
-        // --- PUSH-УВЕДОМЛЕНИЯ ---
+        // Push
         const pushStatus = document.getElementById('push-status');
         const enablePushBtn = document.getElementById('enable-push-btn');
 
@@ -302,9 +330,8 @@
         }
 
         async function checkPushStatus() {
-            alert('Кнопка нажата! Сейчас будет запрос разрешения.');
             if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-                pushStatus.textContent = 'Ваш браузер не поддерживает push-уведомления.';
+                pushStatus.textContent = 'Ваш браузер не поддерживает push.';
                 enablePushBtn.disabled = true;
                 return;
             }
@@ -324,53 +351,50 @@
             }
         }
 
-                enablePushBtn.addEventListener('click', async () => {
-            let diag = "";
-            
-            // 1. Проверяем, в каком режиме открыт сайт
-            if (window.navigator.standalone) {
-                diag += "Режим: PWA (с иконки) ✅\n";
+        enablePushBtn.addEventListener('click', async () => {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                pushStatus.textContent = 'Ваш браузер не поддерживает push.';
+                return;
+            }
+
+            // Проверяем разрешение (без запроса, если уже есть)
+            if (Notification.permission === 'default') {
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    pushStatus.textContent = 'Разрешение отклонено.';
+                    return;
+                }
+            } else if (Notification.permission === 'denied') {
+                pushStatus.textContent = 'Уведомления запрещены в настройках iOS.';
+                return;
+            }
+
+            const registration = await navigator.serviceWorker.register('/sw.js');
+            await navigator.serviceWorker.ready;
+
+            const subscription = await registration.pushManager.getSubscription();
+            if (subscription) {
+                await subscription.unsubscribe();
+                pushStatus.textContent = 'Уведомления отключены.';
+                enablePushBtn.textContent = 'Включить уведомления';
             } else {
-                diag += "Режим: Браузер (не PWA) ❌\n";
-            }
-
-            // 2. Поддерживает ли браузер Notification
-            if ('Notification' in window) {
-                diag += "API Уведомлений: Есть ✅\n";
-            } else {
-                diag += "API Уведомлений: НЕТ ❌\n";
-            }
-
-            // 3. Поддерживает ли Service Worker
-            if ('serviceWorker' in navigator) {
-                diag += "Service Worker: Есть ✅\n";
-            } else {
-                diag += "Service Worker: НЕТ ❌\n";
-            }
-
-            // 4. Текущий статус разрешения
-            if ('Notification' in window) {
-                diag += "Статус разрешения: " + Notification.permission + "\n";
-            }
-
-            alert(diag);
-
-            // Если всё ок, пробуем запросить (без await)
-            if ('Notification' in window && Notification.permission === 'default') {
-                Notification.requestPermission().then(permission => {
-                    alert('Результат запроса: ' + permission);
-                    if (permission === 'granted') {
-                        pushStatus.textContent = 'Уведомления включены ✅';
-                    } else {
-                        pushStatus.textContent = 'Отклонено';
-                    }
-                }).catch(err => {
-                    alert('Ошибка при запросе: ' + err.message);
-                });
+                try {
+                    const keyArray = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+                    const newSubscription = await registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: keyArray.buffer.slice(0) // Важно для iOS
+                    });
+                    console.log('Подписка:', JSON.stringify(newSubscription));
+                    pushStatus.textContent = 'Уведомления включены ✅';
+                    enablePushBtn.textContent = 'Отключить уведомления';
+                } catch (err) {
+                    console.error('Ошибка:', err);
+                    pushStatus.textContent = 'Ошибка: ' + err.message;
+                }
             }
         });
 
-        // --- АДМИН-ПАНЕЛЬ ---
+        // Админ
         const adminAuthBlock = document.getElementById('admin-auth-block');
         const adminPasswordInput = document.getElementById('admin-password-input');
         const adminLoginBtn = document.getElementById('admin-login-btn');
@@ -400,7 +424,9 @@
 
         document.getElementById('apply-test-date').addEventListener('click', () => {
             currentDate = document.getElementById('test-date-input').value;
-            localStorage.setItem('currentDate', currentDate);
+            localStorage.setItem('currentDate', currentDate); // Глобальная дата
+            isShortDay = localStorage.getItem('isShortDay_' + currentDate) === 'true';
+            shortDayCheckbox.checked = isShortDay;
             updateDateDisplay();
             renderSchedule();
             renderTestPairs();
