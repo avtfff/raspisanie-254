@@ -18,8 +18,7 @@
         .header .group { font-size: 16px; color: #8E8E93; margin-top: 6px; font-weight: 500; }
         .settings-btn { position: absolute; top: 4px; right: 0; width: 36px; height: 36px; border-radius: 50%; background: rgba(120, 120, 128, 0.12); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #007AFF; }
         
-        /* Ползунок сокращенного дня */
-        .short-day-toggle { display: flex; justify-content: flex-start; margin-bottom: 16px; padding-left: 4px; }
+        .short-day-toggle { display: flex; justify-content: flex-start; margin-bottom: 16px; padding-left: 4px; align-items: center; }
         .switch { position: relative; display: inline-block; width: 51px; height: 31px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #E5E5EA; transition: .3s; border-radius: 31px; }
@@ -171,10 +170,6 @@
             return d.toISOString().split('T')[0];
         }
 
-        function getTodayDate() {
-            return new Date().toISOString().split('T')[0];
-        }
-
         async function loadScheduleJson() {
             if (manualMode) {
                 renderSchedule();
@@ -233,7 +228,6 @@
             });
         }
 
-        // Ползунок сокращенного дня
         const shortDayCheckbox = document.getElementById('short-day-checkbox');
         shortDayCheckbox.checked = isShortDay;
         shortDayCheckbox.addEventListener('change', (e) => {
@@ -264,7 +258,6 @@
             } 
         });
 
-        // Уведомления интерфейс
         let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
         const notifList = document.getElementById('notif-list');
         const addNotifBtn = document.getElementById('add-notif-btn');
@@ -316,7 +309,6 @@
             });
         }
 
-        // Push
         const pushStatus = document.getElementById('push-status');
         const enablePushBtn = document.getElementById('enable-push-btn');
 
@@ -335,19 +327,24 @@
                 enablePushBtn.disabled = true;
                 return;
             }
-            const registration = await navigator.serviceWorker.getRegistration();
-            if (registration) {
-                const subscription = await registration.pushManager.getSubscription();
-                if (subscription) {
-                    pushStatus.textContent = 'Уведомления включены ✅';
-                    enablePushBtn.textContent = 'Отключить уведомления';
+            // ВАЖНО: На iOS Notification.permission может врать. Проверяем подписку.
+            try {
+                const registration = await navigator.serviceWorker.getRegistration();
+                if (registration) {
+                    const subscription = await registration.pushManager.getSubscription();
+                    if (subscription) {
+                        pushStatus.textContent = 'Уведомления включены ✅';
+                        enablePushBtn.textContent = 'Отключить уведомления';
+                    } else {
+                        pushStatus.textContent = 'Уведомления не включены.';
+                        enablePushBtn.textContent = 'Включить уведомления';
+                    }
                 } else {
                     pushStatus.textContent = 'Уведомления не включены.';
                     enablePushBtn.textContent = 'Включить уведомления';
                 }
-            } else {
-                pushStatus.textContent = 'Уведомления не включены.';
-                enablePushBtn.textContent = 'Включить уведомления';
+            } catch (e) {
+                pushStatus.textContent = 'Ошибка проверки.';
             }
         }
 
@@ -357,44 +354,47 @@
                 return;
             }
 
-            // Проверяем разрешение (без запроса, если уже есть)
-            if (Notification.permission === 'default') {
-                const permission = await Notification.requestPermission();
-                if (permission !== 'granted') {
-                    pushStatus.textContent = 'Разрешение отклонено.';
-                    return;
-                }
-            } else if (Notification.permission === 'denied') {
-                pushStatus.textContent = 'Уведомления запрещены в настройках iOS.';
+            // 1. Проверяем разрешение (без запроса, если уже есть)
+            // На iOS лучше не полагаться на Notification.permission, но для запроса он нужен.
+            let permission = Notification.permission;
+            if (permission === 'default') {
+                permission = await Notification.requestPermission();
+            }
+            
+            if (permission !== 'granted') {
+                pushStatus.textContent = 'Разрешение отклонено или запрещено в настройках iOS.';
                 return;
             }
 
-            const registration = await navigator.serviceWorker.register('/sw.js');
-            await navigator.serviceWorker.ready;
+            // 2. Регистрируем SW и подписываемся
+            try {
+                const registration = await navigator.serviceWorker.register('/sw.js');
+                await navigator.serviceWorker.ready;
 
-            const subscription = await registration.pushManager.getSubscription();
-            if (subscription) {
-                await subscription.unsubscribe();
-                pushStatus.textContent = 'Уведомления отключены.';
-                enablePushBtn.textContent = 'Включить уведомления';
-            } else {
-                try {
+                const subscription = await registration.pushManager.getSubscription();
+                if (subscription) {
+                    await subscription.unsubscribe();
+                    pushStatus.textContent = 'Уведомления отключены.';
+                    enablePushBtn.textContent = 'Включить уведомления';
+                } else {
                     const keyArray = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
                     const newSubscription = await registration.pushManager.subscribe({
                         userVisibleOnly: true,
-                        applicationServerKey: keyArray.buffer.slice(0) // Важно для iOS
+                        applicationServerKey: keyArray.buffer.slice(0)
                     });
                     console.log('Подписка:', JSON.stringify(newSubscription));
                     pushStatus.textContent = 'Уведомления включены ✅';
                     enablePushBtn.textContent = 'Отключить уведомления';
-                } catch (err) {
-                    console.error('Ошибка:', err);
-                    pushStatus.textContent = 'Ошибка: ' + err.message;
+                    
+                    // В реальном приложении здесь нужно отправить JSON на сервер
+                    // alert('Скопируй подписку из консоли и отправь разработчику');
                 }
+            } catch (err) {
+                console.error('Ошибка подписки:', err);
+                pushStatus.textContent = 'Ошибка: ' + err.message;
             }
         });
 
-        // Админ
         const adminAuthBlock = document.getElementById('admin-auth-block');
         const adminPasswordInput = document.getElementById('admin-password-input');
         const adminLoginBtn = document.getElementById('admin-login-btn');
@@ -424,7 +424,7 @@
 
         document.getElementById('apply-test-date').addEventListener('click', () => {
             currentDate = document.getElementById('test-date-input').value;
-            localStorage.setItem('currentDate', currentDate); // Глобальная дата
+            localStorage.setItem('currentDate', currentDate);
             isShortDay = localStorage.getItem('isShortDay_' + currentDate) === 'true';
             shortDayCheckbox.checked = isShortDay;
             updateDateDisplay();
@@ -484,7 +484,6 @@
             }
         });
 
-        // --- ИНИЦИАЛИЗАЦИЯ ---
         updateDateDisplay();
         loadScheduleJson();
     </script>
