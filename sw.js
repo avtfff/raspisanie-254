@@ -1,35 +1,18 @@
-// Service Worker для приема push-уведомлений
-
 self.addEventListener('push', function(event) {
-    let data = { title: 'Расписание', body: 'Новое расписание на завтра!' };
-    
+    let data = { title: 'Расписание', body: 'Новое расписание!' };
     if (event.data) {
-        try {
-            data = event.data.json();
-        } catch (e) {
-            data.body = event.data.text();
-        }
+        try { data = event.data.json(); } catch (e) { data.body = event.data.text(); }
     }
-
     const options = {
         body: data.body,
-        icon: '/icon.png', // если добавишь иконку, укажи путь
+        icon: '/icon.png',
         badge: '/icon.png',
         vibrate: [200, 100, 200],
-        data: {
-            url: '/'
-        }
+        data: { url: '/' }
     };
-
-    event.waitUntil(
-        self.registration.showNotification(data.title, options)
-    );
+    event.waitUntil(self.registration.showNotification(data.title, options));
 });
-
-// Клик по уведомлению открывает сайт
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
-    event.waitUntil(
-        clients.openWindow(event.notification.data.url)
-    );
+    event.waitUntil(clients.openWindow(event.notification.data.url));
 });

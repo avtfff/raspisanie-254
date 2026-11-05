@@ -8,7 +8,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Расписание">
     <style>
-        /* ... (СТИЛИ ОСТАВЬ ТАКИМИ ЖЕ, КАК БЫЛИ) ... */
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; background: linear-gradient(180deg, #F2F2F7 0%, #E5E5EA 100%); background-attachment: fixed; color: #000000; padding: 24px 16px; padding-top: calc(24px + env(safe-area-inset-top)); padding-bottom: calc(24px + env(safe-area-inset-bottom)); min-height: 100vh; }
         .header { text-align: center; margin-bottom: 20px; position: relative; }
@@ -16,58 +15,48 @@
         .header .group { font-size: 16px; color: #8E8E93; margin-top: 6px; font-weight: 500; }
         .settings-btn { position: absolute; top: 4px; right: 0; width: 36px; height: 36px; border-radius: 50%; background: rgba(120, 120, 128, 0.12); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #007AFF; }
         .toggle-container { display: flex; justify-content: center; margin-bottom: 20px; }
-        .toggle-button { background: #E5E5EA; border: none; border-radius: 10px; padding: 6px 14px; font-size: 14px; font-weight: 500; color: #007AFF; cursor: pointer; }
+        .toggle-button { background: #E5E5EA; border: none; border-radius: 10px; padding: 6px 14px; font-size: 14px; font-weight: 500; color: #007AFF; cursor: pointer; transition: background 0.2s, color 0.2s; }
         .toggle-button.short-day { background: #007AFF; color: #FFFFFF; }
         .card { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); border-radius: 18px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); display: flex; gap: 14px; border: 0.5px solid rgba(255,255,255,0.4); }
-        .card-time { font-family: "SF Mono", monospace; font-size: 14px; font-weight: 600; color: #007AFF; min-width: 80px; }
+        .card-time { font-family: "SF Mono", monospace; font-size: 14px; font-weight: 600; color: #007AFF; min-width: 80px; padding-top: 2px; }
         .card-subject { font-size: 17px; font-weight: 600; line-height: 1.3; margin-bottom: 4px; }
         .card-detail { font-size: 14px; color: #8E8E93; }
         .footer { text-align: center; margin-top: 40px; font-size: 13px; color: #C7C7CC; }
         .footer .author { font-weight: 600; color: #8E8E93; margin-top: 6px; }
+        
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); display: none; align-items: flex-end; justify-content: center; z-index: 100; opacity: 0; transition: opacity 0.25s; }
         .modal-overlay.active { display: flex; opacity: 1; }
         .modal-sheet { background: #F2F2F7; width: 100%; max-width: 500px; border-radius: 24px 24px 0 0; padding: 24px 20px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateY(100%); transition: transform 0.3s; max-height: 85vh; overflow-y: auto; }
         .modal-overlay.active .modal-sheet { transform: translateY(0); }
         .modal-handle { width: 36px; height: 5px; background: #C7C7CC; border-radius: 3px; margin: 0 auto 16px; }
         .modal-title { font-size: 22px; font-weight: 700; margin-bottom: 20px; text-align: center; }
+        
         .settings-section { background: #FFFFFF; border-radius: 16px; padding: 16px; margin-bottom: 16px; }
-        .settings-section h3 { font-size: 15px; font-weight: 600; color: #8E8E93; text-transform: uppercase; margin-bottom: 12px; }
+        .settings-section h3 { font-size: 15px; font-weight: 600; color: #8E8E93; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px; }
+        
         .notif-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
         .notif-item { display: flex; justify-content: space-between; padding: 12px 14px; background: #F2F2F7; border-radius: 12px; font-size: 17px; font-weight: 500; }
         .notif-time { font-family: "SF Mono", monospace; color: #007AFF; font-weight: 600; }
-        .notif-delete { background: none; border: none; color: #FF3B30; cursor: pointer; }
+        .notif-delete { background: none; border: none; color: #FF3B30; cursor: pointer; display: flex; align-items: center; }
         .add-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 14px; background: #FFFFFF; border: none; border-radius: 12px; font-size: 17px; font-weight: 500; color: #007AFF; cursor: pointer; }
         .time-input-row { display: flex; gap: 10px; margin-top: 12px; }
         .time-input { flex: 1; padding: 12px; border: 1px solid #E5E5EA; border-radius: 12px; font-size: 17px; font-family: "SF Mono", monospace; text-align: center; }
         .save-time-btn { padding: 12px 20px; background: #007AFF; border: none; border-radius: 12px; color: #FFFFFF; font-size: 17px; font-weight: 600; cursor: pointer; }
         .empty-notif { text-align: center; color: #8E8E93; font-size: 15px; padding: 8px 0; }
-        .close-btn { width: 100%; padding: 16px; background: #FFFFFF; border: none; border-radius: 16px; font-size: 17px; font-weight: 600; color: #007AFF; cursor: pointer; }
-        .icon { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
         
-        /* Стиль для кнопки включения уведомлений */
-        .enable-push-btn {
-            width: 100%;
-            padding: 16px;
-            background: #007AFF;
-            color: #FFFFFF;
-            border: none;
-            border-radius: 12px;
-            font-size: 17px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-bottom: 12px;
-            font-family: inherit;
-        }
-        .enable-push-btn:disabled {
-            background: #E5E5EA;
-            color: #8E8E93;
-        }
-        .push-status {
-            font-size: 15px;
-            color: #8E8E93;
-            text-align: center;
-            margin-bottom: 12px;
-        }
+        .enable-push-btn { width: 100%; padding: 16px; background: #007AFF; color: #FFFFFF; border: none; border-radius: 12px; font-size: 17px; font-weight: 600; cursor: pointer; margin-bottom: 12px; }
+        .enable-push-btn:disabled { background: #E5E5EA; color: #8E8E93; }
+        .push-status { font-size: 15px; color: #8E8E93; text-align: center; margin-bottom: 12px; }
+        
+        .admin-row { display: flex; gap: 8px; margin-bottom: 8px; }
+        .admin-input { flex: 1; padding: 10px; border: 1px solid #E5E5EA; border-radius: 8px; font-size: 15px; font-family: inherit; }
+        .admin-btn { padding: 10px 16px; background: #007AFF; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+        .admin-card { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #F2F2F7; border-radius: 10px; margin-bottom: 8px; font-size: 15px;}
+        .admin-card-delete { color: #FF3B30; background: none; border: none; cursor: pointer; }
+        .checkbox-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 15px; }
+        .checkbox-row input { width: 20px; height: 20px; }
+        .close-btn { width: 100%; padding: 16px; background: #FFFFFF; border: none; border-radius: 16px; font-size: 17px; font-weight: 600; color: #007AFF; cursor: pointer; margin-top: 8px;}
+        .icon { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
     </style>
 </head>
 <body>
@@ -84,29 +73,32 @@
         <button class="toggle-button" id="bell-toggle">Сокращённый день</button>
     </div>
 
-    <div id="schedule-list"></div>
+    <div id="schedule-list">
+        <div class="card" style="justify-content: center; color: #8E8E93; padding: 40px;">Загрузка...</div>
+    </div>
 
     <div class="footer">
         Расписание обновляется автоматически
         <div class="author">by @Avtomatoff</div>
     </div>
 
-    <!-- Модальное окно настроек -->
     <div class="modal-overlay" id="settings-modal">
         <div class="modal-sheet">
             <div class="modal-handle"></div>
             <div class="modal-title">Настройки</div>
-
+            
+            <!-- Блок Push-уведомлений -->
             <div class="settings-section">
                 <h3>Push-уведомления</h3>
                 <div class="push-status" id="push-status">Проверка статуса...</div>
                 <button class="enable-push-btn" id="enable-push-btn">Включить уведомления</button>
             </div>
 
+            <!-- Блок времени напоминаний -->
             <div class="settings-section">
                 <h3>Время напоминаний</h3>
                 <div class="notif-list" id="notif-list">
-                    <div class="empty-notif" id="empty-notif">Нет добавленных уведомлений</div>
+                    <div class="empty-notif">Нет добавленных уведомлений</div>
                 </div>
                 <div class="time-input-row" id="time-input-row" style="display:none;">
                     <input type="time" class="time-input" id="new-time-input" value="14:00">
@@ -118,108 +110,149 @@
                 </button>
             </div>
 
+            <!-- Блок Админ-панели -->
+            <div class="settings-section">
+                <h3>Тестовый режим (Админ)</h3>
+                <div id="admin-auth-block">
+                    <div class="admin-row">
+                        <input type="password" class="admin-input" id="admin-password-input" placeholder="Пароль">
+                        <button class="admin-btn" id="admin-login-btn">Войти</button>
+                    </div>
+                </div>
+
+                <div id="test-mode-content" style="display:none;">
+                    <div class="checkbox-row">
+                        <input type="checkbox" id="manual-mode-toggle">
+                        <label for="manual-mode-toggle">Ручной режим (сохранять мои правки)</label>
+                    </div>
+                    <div class="admin-row">
+                        <input type="date" class="admin-input" id="test-date-input">
+                        <button class="admin-btn" id="apply-test-date">Применить</button>
+                    </div>
+                    <div class="admin-row">
+                        <input type="text" class="admin-input" id="test-subject" placeholder="Предмет">
+                        <input type="text" class="admin-input" id="test-teacher" placeholder="Препод">
+                    </div>
+                    <button class="admin-btn" id="add-test-pair" style="width: 100%; margin-bottom: 12px;">Добавить пару</button>
+                    <div id="test-pairs-list"></div>
+                    <button class="admin-btn" id="clear-test-pairs" style="width: 100%; background: #FF3B30; margin-top: 8px;">Очистить пары на дату</button>
+                </div>
+            </div>
+
             <button class="close-btn" id="close-settings">Готово</button>
         </div>
     </div>
 
     <script>
-        // --- VAPID КЛЮЧ (из Yandex Cloud) ---
+        // --- VAPID КЛЮЧ ---
         const VAPID_PUBLIC_KEY = 'BCyZSlvKpY0Rx_SaFpHtqryq9lmutyEyl-hpeh_1jEcwTPVcJRtpv0VGw_zfOSZVjzLCj5ggWgIyWlWQJSCIZI';
+        const DEFAULT_ADMIN_PASSWORD = 'admin254'; 
+        let adminPassword = localStorage.getItem('adminPassword') || DEFAULT_ADMIN_PASSWORD;
 
-        // --- РАСПИСАНИЕ ЗВОНКОВ ---
-        const NORMAL_BELLS = [
-            { start: "8:00", end: "9:30" }, { start: "9:40", end: "11:10" }, { start: "11:20", end: "12:50" },
-            { start: "13:50", end: "15:20" }, { start: "15:30", end: "17:00" }, { start: "17:10", end: "18:40" }
-        ];
-        const SHORT_BELLS = [
-            { start: "8:00", end: "9:00" }, { start: "9:10", end: "10:10" }, { start: "10:20", end: "11:20" },
-            { start: "11:30", end: "12:30" }, { start: "12:40", end: "13:40" }, { start: "13:50", end: "14:50" }
-        ];
-        let isShortDay = false;
+        let scheduleData = JSON.parse(localStorage.getItem('scheduleData')) || {};
+        let currentDate = localStorage.getItem('currentDate') || getTomorrowDate();
+        let manualMode = localStorage.getItem('manualMode') === 'true';
 
-        // --- ТЕСТОВЫЕ ДАННЫЕ ---
-        const testSchedule = [
-            { subject: "МДК 01.02 Складская логистика", teacher: "Носкова И.Е." },
-            { subject: "МДК 01.02 Складская логистика", teacher: "Носкова И.Е." },
-            { subject: "МДК 02.02 Распределительная логистика", teacher: "Баранова О.В." }
-        ];
+        function getTomorrowDate() {
+            const d = new Date();
+            d.setDate(d.getDate() + 1);
+            return d.toISOString().split('T')[0];
+        }
 
-        // --- ДАТА ---
-        const dateDisplay = document.getElementById('date-display');
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const options = { weekday: 'long', day: 'numeric', month: 'long' };
-        let dateString = tomorrow.toLocaleDateString('ru-RU', options);
-        dateString = dateString.charAt(0).toUpperCase() + dateString.slice(1);
-        dateDisplay.textContent = dateString;
-
-        // --- КНОПКА СОКРАЩЁННОГО ДНЯ ---
-        const toggleButton = document.getElementById('bell-toggle');
-        toggleButton.addEventListener('click', () => {
-            isShortDay = !isShortDay;
-            toggleButton.classList.toggle('short-day', isShortDay);
+        // Загрузка JSON
+        async function loadScheduleJson() {
+            if (manualMode) {
+                renderSchedule();
+                return;
+            }
+            try {
+                const response = await fetch('schedule.json?t=' + new Date().getTime());
+                if (response.ok) {
+                    const data = await response.json();
+                    scheduleData = { ...data, ...scheduleData };
+                    localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
+                }
+            } catch (e) {
+                console.log('Ошибка загрузки JSON:', e);
+            }
             renderSchedule();
-        });
+        }
 
-        // --- РЕНДЕР РАСПИСАНИЯ ---
+        function updateDateDisplay() {
+            const dateDisplay = document.getElementById('date-display');
+            const d = new Date(currentDate);
+            const options = { weekday: 'long', day: 'numeric', month: 'long' };
+            let dateString = d.toLocaleDateString('ru-RU', options);
+            dateString = dateString.charAt(0).toUpperCase() + dateString.slice(1);
+            dateDisplay.textContent = dateString;
+        }
+
         const listContainer = document.getElementById('schedule-list');
         function renderSchedule() {
             listContainer.innerHTML = '';
-            const bells = isShortDay ? SHORT_BELLS : NORMAL_BELLS;
-            testSchedule.forEach((item, index) => {
-                const bell = bells[index] || { start: "?", end: "?" };
-                const timeStr = `${bell.start} – ${bell.end}`;
+            const pairs = scheduleData[currentDate] || [];
+
+            if (pairs.length === 0) {
+                listContainer.innerHTML = `<div class="card" style="justify-content: center; color: #8E8E93; padding: 40px;">Пар пока нет</div>`;
+                return;
+            }
+
+            pairs.forEach((item) => {
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
-                    <div class="card-time">${timeStr}</div>
+                    <div class="card-time">${item.time || "?"}</div>
                     <div class="card-content">
                         <div class="card-subject">${item.subject}</div>
-                        <div class="card-detail">${item.teacher}</div>
+                        <div class="card-detail">${item.teacher || ''}</div>
                     </div>
                 `;
                 listContainer.appendChild(card);
             });
         }
-        renderSchedule();
 
-        // --- НАСТРОЙКИ: УВЕДОМЛЕНИЯ ---
-        let notifications = [];
         const modal = document.getElementById('settings-modal');
         const openBtn = document.getElementById('open-settings');
         const closeBtn = document.getElementById('close-settings');
-        const notifList = document.getElementById('notif-list');
-        const emptyNotif = document.getElementById('empty-notif');
-        const addBtn = document.getElementById('add-notif-btn');
-        const timeInputRow = document.getElementById('time-input-row');
-        const newTimeInput = document.getElementById('new-time-input');
-        const saveTimeBtn = document.getElementById('save-time-btn');
 
         openBtn.addEventListener('click', () => {
             modal.classList.add('active');
             renderNotifications();
             checkPushStatus();
+            document.getElementById('test-date-input').value = currentDate;
+            document.getElementById('manual-mode-toggle').checked = manualMode;
+            renderTestPairs();
         });
         closeBtn.addEventListener('click', () => {
             modal.classList.remove('active');
-            timeInputRow.style.display = 'none';
+            document.getElementById('time-input-row').style.display = 'none';
         });
-        modal.addEventListener('click', (e) => {
+        modal.addEventListener('click', (e) => { 
             if (e.target === modal) {
                 modal.classList.remove('active');
-                timeInputRow.style.display = 'none';
-            }
+                document.getElementById('time-input-row').style.display = 'none';
+            } 
         });
 
-        addBtn.addEventListener('click', () => {
+        // --- УВЕДОМЛЕНИЯ (ИНТЕРФЕЙС) ---
+        let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+        const notifList = document.getElementById('notif-list');
+        const addNotifBtn = document.getElementById('add-notif-btn');
+        const timeInputRow = document.getElementById('time-input-row');
+        const newTimeInput = document.getElementById('new-time-input');
+        const saveTimeBtn = document.getElementById('save-time-btn');
+
+        addNotifBtn.addEventListener('click', () => {
             timeInputRow.style.display = 'flex';
             newTimeInput.focus();
         });
+
         saveTimeBtn.addEventListener('click', () => {
             const time = newTimeInput.value;
             if (time && !notifications.includes(time)) {
                 notifications.push(time);
                 notifications.sort();
+                localStorage.setItem('notifications', JSON.stringify(notifications));
                 renderNotifications();
             }
             timeInputRow.style.display = 'none';
@@ -247,12 +280,13 @@
                 btn.addEventListener('click', (e) => {
                     const idx = parseInt(e.currentTarget.dataset.index);
                     notifications.splice(idx, 1);
+                    localStorage.setItem('notifications', JSON.stringify(notifications));
                     renderNotifications();
                 });
             });
         }
 
-        // --- ЛОГИКА PUSH-УВЕДОМЛЕНИЙ ---
+        // --- PUSH-УВЕДОМЛЕНИЯ ---
         const pushStatus = document.getElementById('push-status');
         const enablePushBtn = document.getElementById('enable-push-btn');
 
@@ -261,9 +295,7 @@
             const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
             const rawData = window.atob(base64);
             const outputArray = new Uint8Array(rawData.length);
-            for (let i = 0; i < rawData.length; ++i) {
-                outputArray[i] = rawData.charCodeAt(i);
-            }
+            for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
             return outputArray;
         }
 
@@ -273,7 +305,6 @@
                 enablePushBtn.disabled = true;
                 return;
             }
-
             const registration = await navigator.serviceWorker.getRegistration();
             if (registration) {
                 const subscription = await registration.pushManager.getSubscription();
@@ -292,45 +323,129 @@
 
         enablePushBtn.addEventListener('click', async () => {
             if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-                alert('Ваш браузер не поддерживает push-уведомления. На iPhone это работает только в приложении, добавленном на экран "Домой" (iOS 16.4+).');
+                alert('Ваш браузер не поддерживает push.');
                 return;
             }
-
             const registration = await navigator.serviceWorker.register('/sw.js');
             await navigator.serviceWorker.ready;
-
             const permission = await Notification.requestPermission();
             if (permission !== 'granted') {
-                pushStatus.textContent = 'Разрешение на уведомления отклонено.';
+                pushStatus.textContent = 'Разрешение отклонено.';
                 return;
             }
-
             const subscription = await registration.pushManager.getSubscription();
             if (subscription) {
-                // Отписываемся
                 await subscription.unsubscribe();
                 pushStatus.textContent = 'Уведомления отключены.';
                 enablePushBtn.textContent = 'Включить уведомления';
             } else {
-                // Подписываемся
                 try {
                     const newSubscription = await registration.pushManager.subscribe({
                         userVisibleOnly: true,
                         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
                     });
-                    console.log('Подписка создана:', JSON.stringify(newSubscription));
+                    console.log('Подписка:', JSON.stringify(newSubscription));
                     pushStatus.textContent = 'Уведомления включены ✅';
                     enablePushBtn.textContent = 'Отключить уведомления';
-                    
-                    // В реальном приложении здесь нужно отправить subscription на сервер,
-                    // чтобы сервер знал, куда отправлять уведомления.
-                    alert('Подписка создана! Скопируй данные из консоли (F12) и отправь разработчику. В следующем шаге мы автоматизируем это.');
+                    alert('Подписка создана!');
                 } catch (err) {
-                    console.error('Ошибка подписки:', err);
+                    console.error('Ошибка:', err);
                     pushStatus.textContent = 'Ошибка: ' + err.message;
                 }
             }
         });
+
+        // --- АДМИН-ПАНЕЛЬ ---
+        const adminAuthBlock = document.getElementById('admin-auth-block');
+        const adminPasswordInput = document.getElementById('admin-password-input');
+        const adminLoginBtn = document.getElementById('admin-login-btn');
+        const testModeContent = document.getElementById('test-mode-content');
+        const manualModeToggle = document.getElementById('manual-mode-toggle');
+        
+        if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+            adminAuthBlock.style.display = 'none';
+            testModeContent.style.display = 'block';
+        }
+
+        adminLoginBtn.addEventListener('click', () => {
+            if (adminPasswordInput.value === adminPassword) {
+                sessionStorage.setItem('adminLoggedIn', 'true');
+                adminAuthBlock.style.display = 'none';
+                testModeContent.style.display = 'block';
+            } else {
+                alert('Неверный пароль');
+            }
+        });
+
+        manualModeToggle.addEventListener('change', (e) => {
+            manualMode = e.target.checked;
+            localStorage.setItem('manualMode', manualMode);
+            if (!manualMode) loadScheduleJson(); 
+        });
+
+        document.getElementById('apply-test-date').addEventListener('click', () => {
+            currentDate = document.getElementById('test-date-input').value;
+            localStorage.setItem('currentDate', currentDate);
+            updateDateDisplay();
+            renderSchedule();
+            renderTestPairs();
+        });
+
+        document.getElementById('add-test-pair').addEventListener('click', () => {
+            const subject = document.getElementById('test-subject').value.trim();
+            const teacher = document.getElementById('test-teacher').value.trim();
+            if (!subject) return alert('Введите предмет');
+            
+            if (!scheduleData[currentDate]) scheduleData[currentDate] = [];
+            const times = ["8:00 – 9:30", "9:40 – 11:10", "11:20 – 12:50", "13:50 – 15:20", "15:30 – 17:00", "17:10 – 18:40"];
+            const time = times[scheduleData[currentDate].length] || "?";
+            
+            scheduleData[currentDate].push({ time, subject, teacher });
+            localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
+            
+            document.getElementById('test-subject').value = '';
+            document.getElementById('test-teacher').value = '';
+            renderTestPairs();
+            renderSchedule();
+        });
+
+        function renderTestPairs() {
+            const list = document.getElementById('test-pairs-list');
+            list.innerHTML = '';
+            const pairs = scheduleData[currentDate] || [];
+            if (pairs.length === 0) {
+                list.innerHTML = '<div style="color:#8E8E93; font-size:14px; text-align:center; margin-bottom:12px;">Нет пар</div>';
+                return;
+            }
+            pairs.forEach((pair, index) => {
+                const div = document.createElement('div');
+                div.className = 'admin-card';
+                div.innerHTML = `<span>${pair.subject}</span><button class="admin-card-delete" data-index="${index}">✕</button>`;
+                list.appendChild(div);
+            });
+            document.querySelectorAll('.admin-card-delete').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const idx = parseInt(e.currentTarget.dataset.index);
+                    scheduleData[currentDate].splice(idx, 1);
+                    localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
+                    renderTestPairs();
+                    renderSchedule();
+                });
+            });
+        }
+
+        document.getElementById('clear-test-pairs').addEventListener('click', () => {
+            if (confirm('Удалить все пары на эту дату?')) {
+                scheduleData[currentDate] = [];
+                localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
+                renderTestPairs();
+                renderSchedule();
+            }
+        });
+
+        // --- ИНИЦИАЛИЗАЦИЯ ---
+        updateDateDisplay();
+        loadScheduleJson();
     </script>
 </body>
 </html>
