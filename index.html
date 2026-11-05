@@ -147,7 +147,7 @@
 
     <script>
         // --- VAPID КЛЮЧ ---
-        const VAPID_PUBLIC_KEY = 'BCyZSlvKpY0Rx_SaFpHtqryq9lmutyEyl-hpeh_1jEcwTPVcJRtpv0VGw_zfOSZVjzLCj5ggWgIyWlWQJSCIZI';
+        const VAPID_PUBLIC_KEY = 'BCyZSlvKpYoRx_SaFpHtqyryq9lmutEyJ-hpeh_1jEcwTPvcJRtpv0VGw_zfOSZVjIzLCj5ggWgIyfWJQJSClZI';
         const DEFAULT_ADMIN_PASSWORD = 'admin254'; 
         let adminPassword = localStorage.getItem('adminPassword') || DEFAULT_ADMIN_PASSWORD;
 
@@ -324,37 +324,49 @@
             }
         }
 
-        enablePushBtn.addEventListener('click', async () => {
-            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-                alert('Ваш браузер не поддерживает push.');
-                return;
-            }
-            const registration = await navigator.serviceWorker.register('/sw.js');
-            await navigator.serviceWorker.ready;
-            const permission = await Notification.requestPermission();
-            if (permission !== 'granted') {
-                pushStatus.textContent = 'Разрешение отклонено.';
-                return;
-            }
-            const subscription = await registration.pushManager.getSubscription();
-            if (subscription) {
-                await subscription.unsubscribe();
-                pushStatus.textContent = 'Уведомления отключены.';
-                enablePushBtn.textContent = 'Включить уведомления';
+                enablePushBtn.addEventListener('click', async () => {
+            let diag = "";
+            
+            // 1. Проверяем, в каком режиме открыт сайт
+            if (window.navigator.standalone) {
+                diag += "Режим: PWA (с иконки) ✅\n";
             } else {
-                try {
-                    const newSubscription = await registration.pushManager.subscribe({
-                        userVisibleOnly: true,
-                        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-                    });
-                    console.log('Подписка:', JSON.stringify(newSubscription));
-                    pushStatus.textContent = 'Уведомления включены ✅';
-                    enablePushBtn.textContent = 'Отключить уведомления';
-                    alert('Подписка создана!');
-                } catch (err) {
-                    console.error('Ошибка:', err);
-                    pushStatus.textContent = 'Ошибка: ' + err.message;
-                }
+                diag += "Режим: Браузер (не PWA) ❌\n";
+            }
+
+            // 2. Поддерживает ли браузер Notification
+            if ('Notification' in window) {
+                diag += "API Уведомлений: Есть ✅\n";
+            } else {
+                diag += "API Уведомлений: НЕТ ❌\n";
+            }
+
+            // 3. Поддерживает ли Service Worker
+            if ('serviceWorker' in navigator) {
+                diag += "Service Worker: Есть ✅\n";
+            } else {
+                diag += "Service Worker: НЕТ ❌\n";
+            }
+
+            // 4. Текущий статус разрешения
+            if ('Notification' in window) {
+                diag += "Статус разрешения: " + Notification.permission + "\n";
+            }
+
+            alert(diag);
+
+            // Если всё ок, пробуем запросить (без await)
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission().then(permission => {
+                    alert('Результат запроса: ' + permission);
+                    if (permission === 'granted') {
+                        pushStatus.textContent = 'Уведомления включены ✅';
+                    } else {
+                        pushStatus.textContent = 'Отклонено';
+                    }
+                }).catch(err => {
+                    alert('Ошибка при запросе: ' + err.message);
+                });
             }
         });
 
