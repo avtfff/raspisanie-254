@@ -302,6 +302,7 @@
         }
 
         async function checkPushStatus() {
+            alert('Кнопка нажата! Сейчас будет запрос разрешения.');
             if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
                 pushStatus.textContent = 'Ваш браузер не поддерживает push-уведомления.';
                 enablePushBtn.disabled = true;
